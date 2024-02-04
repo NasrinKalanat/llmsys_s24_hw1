@@ -233,8 +233,34 @@ __global__ void MatrixMultiplyKernel(
     // 5. Compute the output tile for this thread block
     // 6. Synchronize to make sure all threads are done computing the output tile for (row, col)
     // 7. Write the output to global memory
-
-    assert(false && "Not Implemented");
+    int m=a_shape[1], n=a_shape[2];
+    int p=b_shape[2];
+    int t_i = blockIdx.x * blockDim.x + threadIdx.x;
+    int t_j = blockIdx.y * blockDim.y + threadIdx.y;
+    int sa_2=a_strides[1], sa_3=a_strides[2];
+    int sb_2=b_strides[1], sb_3=b_strides[2];
+    int so_1=out_shape[0]>1 ? out_strides[0] : 0, so_2=out_strides[1],so_3=out_strides[2];
+    scalar_t tmp = 0;
+    for (int t=0; t<n; t+=TILE) {
+        int a_j = t + threadIdx.y;
+        int b_i = t + threadIdx.x;
+        if (t_i<m && a_j<n)
+            a_shared[threadIdx.x][threadIdx.y]=a_storage[batch*a_batch_stride+t_i*sa_2+a_j*sa_3];
+        else
+            a_shared[threadIdx.x][threadIdx.y]=0;
+        if (b_i<n && t_j<p)
+            b_shared[threadIdx.x][threadIdx.y]=b_storage[batch*b_batch_stride+b_i*sb_2+t_j*sb_3];
+        else
+            b_shared[threadIdx.x][threadIdx.y]=0;
+        __syncthreads();
+        for (int k=0; k<TILE; k++){
+            tmp+=a_shared[threadIdx.x][k]*b_shared[k][threadIdx.y];
+        }
+        __syncthreads();
+    }
+    if (t_i<out_shape[1] && t_j<out_shape[2])
+        out[batch*so_1+t_i*so_2+t_j*so_3] = tmp;
+//     assert(false && "Not Implemented");
     /// END ASSIGN1_2
 }
 
@@ -286,8 +312,19 @@ __global__ void mapKernel(
     // 4. Calculate the position of element in in_array according to in_index and in_strides
     // 5. Calculate the position of element in out_array according to out_index and out_strides
     // 6. Apply the unary function to the input element and write the output to the out memory
+    int t_i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (t_i<out_size){
+        to_index(t_i, out_shape, out_index, shape_size);
+        broadcast_index(out_index, out_shape, shape_size, in_index, in_shape, shape_size);
+        int in_pos=index_to_position(in_index, in_strides, shape_size);
+        int out_pos=index_to_position(out_index, out_strides, shape_size);
+        out[out_pos]=fn(fn_id, in_storage[in_pos]);
+
+    }
+
+
     
-    assert(false && "Not Implemented");
+//     assert(false && "Not Implemented");
     /// END ASSIGN1_2
 }
 
@@ -343,8 +380,22 @@ __global__ void reduceKernel(
     // 3. Initialize the reduce_value to the output element
     // 4. Iterate over the reduce_dim dimension of the input array to compute the reduced value
     // 5. Write the reduced value to out memory
+    int t_i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (t_i<out_size){
+        to_index(t_i, out_shape, out_index, shape_size);
+        scalar_t tmp=reduce_value;
+        int idx=out_index[reduce_dim];
+        for (int i=0; i<a_shape[reduce_dim]; i++){
+            out_index[reduce_dim]=i;
+            int pos=index_to_position(out_index, a_strides, shape_size);
+            tmp = fn(fn_id, a_storage[pos], tmp);
+        }
+        out_index[reduce_dim]=idx;
+        out[t_i]=tmp;
+    }
+
     
-    assert(false && "Not Implemented");
+//     assert(false && "Not Implemented");
     /// END ASSIGN1_2
 }
 
@@ -409,8 +460,18 @@ __global__ void zipKernel(
     // 6. Broadcast the out_index to the b_index according to b_shape
     // 7.Calculate the position of element in b_array according to b_index and b_strides
     // 8. Apply the binary function to the input elements in a_array & b_array and write the output to the out memory
+    int t_i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (t_i<out_size){
+        to_index(t_i, out_shape, out_index, out_shape_size);
+        int pos = index_to_position(out_index, out_strides, out_shape_size);
+        broadcast_index(out_index, out_shape, out_shape_size, a_index, a_shape, a_shape_size);
+        int pos_a = index_to_position(a_index, a_strides, a_shape_size);
+        broadcast_index(out_index, out_shape, out_shape_size, b_index, b_shape, b_shape_size);
+        int pos_b = index_to_position(b_index, b_strides, b_shape_size);
+        out[pos] = fn(fn_id, a_storage[pos_a], b_storage[pos_b]);
+    }
     
-    assert(false && "Not Implemented");
+//     assert(false && "Not Implemented");
     /// END ASSIGN1_2
 }
 

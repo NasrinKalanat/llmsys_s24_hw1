@@ -139,8 +139,49 @@ class CudaKernelOps(TensorOps):
             # 2. Call the tensorZip function implemented in CUDA
             # 3. Copy the gpuarray back to the cpu
             # 4. Free the gpuarrays
+            out_array_gpu = gpuarray.to_gpu(out._tensor._storage)
+            out_shape_gpu = gpuarray.to_gpu(out._tensor._shape.astype(np.int32))
+            out_strides_gpu = gpuarray.to_gpu(out._tensor._strides.astype(np.int32))
+            a_array_gpu = gpuarray.to_gpu(a._tensor._storage)
+            a_shape_gpu = gpuarray.to_gpu(a._tensor._shape.astype(np.int32))
+            a_strides_gpu = gpuarray.to_gpu(a._tensor._strides.astype(np.int32))
+            b_array_gpu = gpuarray.to_gpu(b._tensor._storage)
+            b_shape_gpu = gpuarray.to_gpu(b._tensor._shape.astype(np.int32))
+            b_strides_gpu = gpuarray.to_gpu(b._tensor._strides.astype(np.int32))
 
-            raise NotImplementedError("Zip Function Not Implemented Yet")
+            # Call the function
+            lib.tensorZip(
+                ctypes.cast(out_array_gpu.ptr, ctypes.POINTER(ctypes.c_double)),
+                ctypes.cast(out_shape_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.cast(out_strides_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.c_int(out.size),
+                ctypes.c_int(len(out.shape)),
+                ctypes.cast(a_array_gpu.ptr, ctypes.POINTER(ctypes.c_double)),
+                ctypes.cast(a_shape_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.cast(a_strides_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.c_int(len(a.shape)),
+                ctypes.cast(b_array_gpu.ptr, ctypes.POINTER(ctypes.c_double)),
+                ctypes.cast(b_shape_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.cast(b_strides_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.c_int(len(b.shape)),
+                ctypes.c_int(fn_id)
+            )
+
+            # Copy the gpuarray back to the cpu
+            out._tensor._storage = out_array_gpu.get()
+
+            # Free the gpuarrays
+            out_array_gpu.gpudata.free()
+            out_shape_gpu.gpudata.free()
+            out_strides_gpu.gpudata.free()
+            a_array_gpu.gpudata.free()
+            a_shape_gpu.gpudata.free()
+            a_strides_gpu.gpudata.free()
+            b_array_gpu.gpudata.free()
+            b_shape_gpu.gpudata.free()
+            b_strides_gpu.gpudata.free()
+
+            # raise NotImplementedError("Zip Function Not Implemented Yet")
             # END ASSIGN1_2
             
             return out
@@ -182,8 +223,40 @@ class CudaKernelOps(TensorOps):
             # 2. Call the tensorReduce function implemented in CUDA
             # 3. Copy the gpuarray back to the cpu
             # 4. Free the gpuarrays
-            
-            raise NotImplementedError("Reduce Function Not Implemented Yet")
+            out_array_gpu = gpuarray.to_gpu(out._tensor._storage)
+            out_shape_gpu = gpuarray.to_gpu(out._tensor._shape.astype(np.int32))
+            out_strides_gpu = gpuarray.to_gpu(out._tensor._strides.astype(np.int32))
+            in_array_gpu = gpuarray.to_gpu(a._tensor._storage)
+            in_shape_gpu = gpuarray.to_gpu(a._tensor._shape.astype(np.int32))
+            in_strides_gpu = gpuarray.to_gpu(a._tensor._strides.astype(np.int32))
+
+            # Call the function
+            lib.tensorReduce(
+                ctypes.cast(out_array_gpu.ptr, ctypes.POINTER(ctypes.c_double)),
+                ctypes.cast(out_shape_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.cast(out_strides_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.c_int(out.size),
+                ctypes.cast(in_array_gpu.ptr, ctypes.POINTER(ctypes.c_double)),
+                ctypes.cast(in_shape_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.cast(in_strides_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+                ctypes.c_int(dim),
+                ctypes.c_double(reduce_value),
+                ctypes.c_int(len(a.shape)),
+                ctypes.c_int(fn_id)
+            )
+
+            # Copy the gpuarray back to the cpu
+            out._tensor._storage = out_array_gpu.get()
+
+            # Free the gpuarrays
+            out_array_gpu.gpudata.free()
+            out_shape_gpu.gpudata.free()
+            out_strides_gpu.gpudata.free()
+            in_array_gpu.gpudata.free()
+            in_shape_gpu.gpudata.free()
+            in_strides_gpu.gpudata.free()
+
+            # raise NotImplementedError("Reduce Function Not Implemented Yet")
             # END ASSIGN1_2
             
             return out
@@ -232,8 +305,48 @@ class CudaKernelOps(TensorOps):
         # 2. Call the Matmul function implemented in CUDA
         # 3. Copy the gpuarray back to the cpu
         # 4. Free the gpuarrays
+        out_array_gpu = gpuarray.to_gpu(out._tensor._storage)
+        out_shape_gpu = gpuarray.to_gpu(out._tensor._shape.astype(np.int32))
+        out_strides_gpu = gpuarray.to_gpu(out._tensor._strides.astype(np.int32))
+        a_array_gpu = gpuarray.to_gpu(a._tensor._storage)
+        a_shape_gpu = gpuarray.to_gpu(a._tensor._shape.astype(np.int32))
+        a_strides_gpu = gpuarray.to_gpu(a._tensor._strides.astype(np.int32))
+        b_array_gpu = gpuarray.to_gpu(b._tensor._storage)
+        b_shape_gpu = gpuarray.to_gpu(b._tensor._shape.astype(np.int32))
+        b_strides_gpu = gpuarray.to_gpu(b._tensor._strides.astype(np.int32))
 
-        raise NotImplementedError("Matrix Multiply Function Not Implemented Yet")
+        # Call the function
+        lib.MatrixMultiply(
+            ctypes.cast(out_array_gpu.ptr, ctypes.POINTER(ctypes.c_double)),
+            ctypes.cast(out_shape_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+            ctypes.cast(out_strides_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+            ctypes.cast(a_array_gpu.ptr, ctypes.POINTER(ctypes.c_double)),
+            ctypes.cast(a_shape_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+            ctypes.cast(a_strides_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+            ctypes.cast(b_array_gpu.ptr, ctypes.POINTER(ctypes.c_double)),
+            ctypes.cast(b_shape_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+            ctypes.cast(b_strides_gpu.ptr, ctypes.POINTER(ctypes.c_int)),
+            ctypes.c_int(out.shape[0]),
+            ctypes.c_int(out.shape[1]),
+            ctypes.c_int(out.shape[2])
+
+        )
+
+        # Copy the gpuarray back to the cpu
+        out._tensor._storage = out_array_gpu.get()
+
+        # Free the gpuarrays
+        out_array_gpu.gpudata.free()
+        out_shape_gpu.gpudata.free()
+        out_strides_gpu.gpudata.free()
+        a_array_gpu.gpudata.free()
+        a_shape_gpu.gpudata.free()
+        a_strides_gpu.gpudata.free()
+        b_array_gpu.gpudata.free()
+        b_shape_gpu.gpudata.free()
+        b_strides_gpu.gpudata.free()
+
+        # raise NotImplementedError("Matrix Multiply Function Not Implemented Yet")
         # END ASSIGN1_2
         
         # Undo 3d if we added it.
