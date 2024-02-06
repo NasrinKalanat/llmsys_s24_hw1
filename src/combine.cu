@@ -388,7 +388,7 @@ __global__ void reduceKernel(
         for (int i=0; i<a_shape[reduce_dim]; i++){
             out_index[reduce_dim]=i;
             int pos=index_to_position(out_index, a_strides, shape_size);
-            tmp = fn(fn_id, a_storage[pos], tmp);
+            tmp = fn(fn_id, tmp, a_storage[pos]);
         }
         out_index[reduce_dim]=idx;
         out[t_i]=tmp;

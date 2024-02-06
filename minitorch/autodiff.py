@@ -69,9 +69,9 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     def recur(var):
       if var.is_constant() or var.unique_id in seen:
         return
-      seen.add(var.unique_id)
       for v in var.parents:
         recur(v)
+      seen.add(var.unique_id)
       res.insert(0,var)
 
     recur(variable)
@@ -95,7 +95,7 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     # BEGIN ASSIGN1_1
     # TODO
     backs = topological_sort(variable)
-    dct={var.unique_id:deriv*0 for var in backs}
+    dct={var.unique_id:0 for var in backs}
     dct[variable.unique_id]=deriv
     for v in backs:
         if v.is_leaf():
